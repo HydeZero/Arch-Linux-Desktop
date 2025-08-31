@@ -5,16 +5,20 @@ FROM archlinux:latest
 
 # Setup the new default user
 USER root
+RUN pacman -Syu --noconfirm sudo git
 RUN useradd -m -G wheel -s /bin/bash user
+RUN echo "default_pass" | passwd user --stdin
+RUN echo '%wheel ALL=(ALL) ALL:ALL' >> \
+/etc/sudoers
 
 # Switch to the user
 USER user
 
 # Install plasma (both wayland and x11)
-RUN sudo pacman -Syu --noconfirm plasma plasma-x11-session
+RUN echo "default_pass" | sudo -S pacman -Syu --noconfirm plasma plasma-x11-session
 
 # Install yay (for xrdp)
-RUN git clone https://aur.archlinux.org/yay.git && \
+RUN cd /home/user && git clone https://aur.archlinux.org/yay.git && \
     cd yay && \
     makepkg -si --noconfirm
 
@@ -22,7 +26,9 @@ RUN git clone https://aur.archlinux.org/yay.git && \
 RUN yay -S --noconfirm xrdp xorgxrdp
 
 # Enable the xrdp service
-RUN sudo systemctl enable xrdp.service
+RUN echo "default_pass" | sudo -S systemctl enable xrdp.service
 
 # Start the xrdp service
-RUN sudo systemctl start xrdp.service
+RUN echo "default_pass" | sudo -S systemctl start xrdp.service
+
+RUN echo "ALL GOOD. Please RDP into the image."
